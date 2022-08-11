@@ -22,12 +22,12 @@ function App() {
     ws.current = new WebSocket("ws://localhost:3000");
 
     ws.current.onopen = (event) => {
-      ws.current?.send(JSON.stringify({ message: "'You're connected to WebSocket Server.'" }))
+      console.log('You\'re connected to WebSocket Server.')
     }
 
     ws.current.onmessage = (event) => {
       const {data} = event
-
+      
       console.log(data)
     }
   }, [])
