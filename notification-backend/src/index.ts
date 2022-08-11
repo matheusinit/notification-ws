@@ -13,12 +13,23 @@ const server = http.createServer(app)
 const wss = new WebSocketServer({ server })
 
 wss.on('connection', (ws: WebSocket) => {
-  ws.on('message', (message: string) => {
-    console.log(message)
+  ws.on('open', (message: string) => {
+    console.log(JSON.parse(message))
   })
 
-  ws.send('Hiii');
+
+  ws.on('message', (message: string) => {
+    const response = JSON.parse(message)
+
+    if (response.event === 'login') {
+      
+      // const userAlreadyCreated = sessionStorage.getItem(response.data.username)
+
+      // if (!userAlreadyCreated) {
+      //   sessionStorage.setItem(response.data.username, '')
+      // }
+    }
+  })
 })
 
-
-app.listen(3000, () => console.log('Server running on port 3000'))
+server.listen(3000, () => console.log('Server running on port 3000'))

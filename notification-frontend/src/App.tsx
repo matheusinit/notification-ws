@@ -1,35 +1,69 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 function App() {
-  const [bids, setBids] = useState([0])
+  const ws = useRef<WebSocket>()
 
-  const ws = new WebSocket("wss://localhost:3000");
+  const [username, setUsername] = useState<string>('')
 
-  const apiCall = {
-    event: "bts:subscribe",
-    data: { channel: "order_book_btcusd" },
+  // const createNotification = () => {
+  //   ws.current.send({  })
+  // }
+
+  const logar = () => {
+    ws.current?.send(JSON.stringify({ 
+      event: 'login',
+      data: {
+        username
+      }
+    }))  
   }
 
-  ws.onopen = (event) => {
-    ws.send(JSON.stringify(apiCall));
-  };
+  useEffect(() => {
+    ws.current = new WebSocket("ws://localhost:3000");
 
-  ws.onmessage = function (event) {
-    const json = JSON.parse(event.data);
-    try {
-      if ((json.event = "data")) {
-        setBids(json.data.bids.slice(0, 5));
-      }
-    } catch (err) {
-      console.log(err);
+    ws.current.onopen = (event) => {
+      ws.current?.send(JSON.stringify({ message: "'You're connected to WebSocket Server.'" }))
     }
-  };
+
+    ws.current.onmessage = (event) => {
+      const {data} = event
+
+      console.log(data)
+    }
+  }, [])
+
+  // const apiCall = {
+  //   event: "bts:subscribe",
+  //   data: { channel: "order_book_btcusd" },
+  // }
+
+  // ws.onopen = (event) => {
+  //   console.log()
+  // };
+
+  // ws.onmessage = function (event) {
+  //   const json = JSON.parse(event.data);
+  //   try {
+  //     if ((json.event = "data")) {
+  //       setBids(json.data.bids.slice(0, 5));
+  //     }
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // };
 
   return (
    <div>
-    {bids.map(item => (
-      <p>{item}</p>
-    ))}
+      <div>
+        <input type="text" name="username" onChange={(event) => setUsername(event.target.value)} value={username} />
+        <button type="button" onClick={logar}>Logar</button>
+      </div>
+
+      {/* <form>
+        <input type="text" name="content" />
+
+        <button type="button">Criar notificação</button>
+      </form> */}
    </div>
   );
 }
