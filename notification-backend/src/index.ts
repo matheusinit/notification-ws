@@ -83,9 +83,13 @@ wss.on('connection', (ws: WebSocket) => {
         data: responseData
       }
 
-      // ws.send(JSON.stringify(response))
+      wss.clients.forEach(client => {
+        if (client !== ws && client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify(response));
+        }
+      })
     } else if (event == 'establish') {
-      const { sessionId } = data
+      // const { sessionId } = data
 
       const buffer = fs.readFileSync(path.join(__dirname, '..', 'database.json'), 'utf-8')
 
@@ -111,34 +115,6 @@ wss.on('connection', (ws: WebSocket) => {
 
       ws.send(JSON.stringify(response))
     }
-
-    setInterval(() => {
-      const buffer = fs.readFileSync(path.join(__dirname, '..', 'database.json'), 'utf-8')
-
-      database = JSON.parse(buffer) as { [key: string]: any }
-
-      const messagesofUsers = Object.values(database).filter(item => item !== 'Database')
-
-      const messages = []
-
-      for (const messageObject of messagesofUsers) {
-        const messageList = Object.values(messageObject)[0] as any[]
-        for (const message of messageList) {
-          messages.push(message)
-        }
-      }
-
-      messages.sort((a, b) => {
-        const c = new Date(a) as any
-        const d = new Date(b) as any
-        return c - d
-       })
-
-      ws.send(JSON.stringify({
-        event: 'all',
-        data: messages
-      }))
-    }, 1000)
   })
 })
 

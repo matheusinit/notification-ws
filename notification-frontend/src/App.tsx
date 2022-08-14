@@ -62,11 +62,18 @@ function App() {
       if (response.event === 'message:recover' && response.data) {
         setMessageList(prev => [...prev, ...response.data]) 
       } else if (response.event === 'message:create') {
-        setMessageList([...response.data])
-      } else if (response.event === 'all') {
-        setMessageList([...response.data])
+        setMessageList(prev => {
+          if (prev.filter(item => item.id === response.data.id).length !== 0) {
+            return [...prev]
+          }
+
+          return [...prev, response.data]
+        })
       }
+      
+      console.log(response)
     }
+
   }, [])
 
   return (
