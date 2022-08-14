@@ -1,70 +1,93 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid'
+import { InputContainer, Input, MessageContainer } from './styles';
+
+function getOrCreateSessionId(
+  setSessionId: React.Dispatch<React.SetStateAction<string>>
+) {
+  if (!localStorage.getItem('session')) {
+    const sessionId = uuidv4()
+    setSessionId(sessionId)
+    localStorage.setItem('session', sessionId)
+  } else {
+    const sessionId = String(localStorage.getItem('session'))
+    setSessionId(sessionId)
+  }
+}
+
+interface Message {
+  id: string
+  message: string;
+}
 
 function App() {
   const ws = useRef<WebSocket>()
 
-  const [username, setUsername] = useState<string>('')
+  const [message, setMessage] = useState<string>('')
+  const [messageList, setMessageList] = useState<Message[]>([])
+  const [sessionId, setSessionId] = useState<string>('')
 
-  // const createNotification = () => {
-  //   ws.current.send({  })
-  // }
-
-  const logar = () => {
+  const criarMensagem = () => {
     ws.current?.send(JSON.stringify({ 
-      event: 'login',
+      event: 'message:create',
       data: {
-        username
-      }
-    }))  
+        id: sessionId,
+        message
+      } 
+    }))
   }
 
   useEffect(() => {
     ws.current = new WebSocket("ws://localhost:3000");
 
     ws.current.onopen = (event) => {
-      console.log('You\'re connected to WebSocket Server.')
+      if (ws.current?.readyState === WebSocket.OPEN) {
+        const sessionId = localStorage.getItem('session')
+
+        const data = JSON.stringify({ event: 'establish', data: {
+          sessionId
+        }}) 
+
+        ws.current.send(data)
+      }
     }
 
+    getOrCreateSessionId(setSessionId)
+
     ws.current.onmessage = (event) => {
-      const {data} = event
-      
-      console.log(data)
+      const { data } = event
+
+      const response = JSON.parse(data)
+
+      if (response.event === 'message:recover' && response.data) {
+        setMessageList(prev => [...prev, ...response.data]) 
+      } else if (response.event === 'message:create') {
+        setMessageList([...response.data])
+      } else if (response.event === 'all') {
+        setMessageList([...response.data])
+      }
     }
   }, [])
 
-  // const apiCall = {
-  //   event: "bts:subscribe",
-  //   data: { channel: "order_book_btcusd" },
-  // }
-
-  // ws.onopen = (event) => {
-  //   console.log()
-  // };
-
-  // ws.onmessage = function (event) {
-  //   const json = JSON.parse(event.data);
-  //   try {
-  //     if ((json.event = "data")) {
-  //       setBids(json.data.bids.slice(0, 5));
-  //     }
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-  // };
-
   return (
-   <div>
-      <div>
-        <input type="text" name="username" onChange={(event) => setUsername(event.target.value)} value={username} />
-        <button type="button" onClick={logar}>Logar</button>
-      </div>
+    <div>
+      <InputContainer>
+          <Input 
+            type="text" 
+            placeholder="Digite sua mensagem..." 
+            onChange={(event) => setMessage(event.target.value)} 
+            value={message} 
+            />
 
-      {/* <form>
-        <input type="text" name="content" />
+          <button type="button" onClick={criarMensagem}>Enviar mensagem</button>
+      </InputContainer>
 
-        <button type="button">Criar notificação</button>
-      </form> */}
-   </div>
+      <MessageContainer>
+        {messageList.map(item => (
+          <div key={item.id}>{item.message}</div>
+        ))}
+      </MessageContainer>
+    </div>
   );
 }
 
