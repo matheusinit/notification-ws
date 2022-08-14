@@ -15,4 +15,14 @@ export const Input = styled.input`
 `
 
 export const MessageContainer = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+
+  & > div {
+    flex: 1 1 300px;
+    margin-right: 30px;
+    margin-bottom: 15px;
+  }
 `

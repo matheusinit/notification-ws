@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid'
 import { InputContainer, Input, MessageContainer } from './styles';
+import { Notification } from './components/Notification'
 
 function getOrCreateSessionId(
   setSessionId: React.Dispatch<React.SetStateAction<string>>
@@ -16,8 +17,10 @@ function getOrCreateSessionId(
 }
 
 interface Message {
-  id: string
+  id: string;
   message: string;
+  owner: string;
+  date: Date;
 }
 
 function App() {
@@ -63,6 +66,7 @@ function App() {
         setMessageList(prev => [...prev, ...response.data]) 
       } else if (response.event === 'message:create') {
         setMessageList(prev => {
+          console.log(prev[0])
           if (prev.filter(item => item.id === response.data.id).length !== 0) {
             return [...prev]
           }
@@ -70,8 +74,6 @@ function App() {
           return [...prev, response.data]
         })
       }
-      
-      console.log(response)
     }
 
   }, [])
@@ -90,8 +92,8 @@ function App() {
       </InputContainer>
 
       <MessageContainer>
-        {messageList.map(item => (
-          <div key={item.id}>{item.message}</div>
+        {messageList.map(({ id, message, date, owner }) => (
+          <Notification key={id} id={id} message={message} date={date} owner={owner} />
         ))}
       </MessageContainer>
     </div>
